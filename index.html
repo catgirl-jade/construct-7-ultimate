@@ -30,19 +30,23 @@
         .button:nth-child(5) { background-color: #0000ff; box-shadow: 0 0 10px #0000ff; }
         .button:nth-child(6) { background-color: #4b0082; box-shadow: 0 0 10px #4b0082; }
         .button:nth-child(7) { background-color: #8b00ff; box-shadow: 0 0 10px #8b00ff; }
+        .button:nth-child(8) { background-color: #ff0000; box-shadow: 0 0 10px #ff0000; }
+        .button:nth-child(9) { background-color: #ff7f00; box-shadow: 0 0 10px #ff7f00; }
+        .button:nth-child(10) { background-color: #ffff00; box-shadow: 0 0 10px #ffff00; }
         #progress-bar { width: 100%; height: 10px; background: #444; margin-top: 20px; position: relative; }
         #progress-filled { height: 100%; background: #1da1f2; width: 0; transition: width 0.5s; position: absolute; top: 0; left: 0; text-align: center; line-height: 10px; color: white; font-size: 12px; }
         @keyframes fadeOut { to { opacity: 0; display: none; } }
         #results { display: none; margin-top: 50px; }
         #instructions { font-size: 14px; margin-top: 20px; color: #ccc; }
         #restart-button { margin-top: 20px; padding: 10px 20px; font-size: 18px; background: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        .share-button { margin-top: 20px; padding: 10px 20px; font-size: 18px; background: #0000ff; color: white; border: none; border-radius: 5px; cursor: pointer; }
         #restart-button:hover { background: #218838; }
     </style>
 </head>
 <body>
     <div id="timer">00:00:000</div>
     <div id="robot"></div>
-    <div id="calibration-instruction">Calibrate vitals to multiples of <span id="k-value">3</span></div>
+    <h1 id="calibration-instruction">Calibrate vitals to multiples of <span id="k-value">3</span></h1>
     <div id="hp">HP: <span id="hp-bar">150000</span></div>
     <div class="button-container" id="button-container"></div>
     <div id="progress-bar"><div id="progress-filled">0/20</div></div>
@@ -57,14 +61,14 @@
         </div>
     </div>
     <div id="instructions">
-        <p>Click the buttons or use the keyboard (0-9) to play. Hover over buttons to preview the resulting HP.</p>
+        <p>Click the buttons or use the keyboard (0-9) to play. Hover over buttons to preview the resulting HP. To succeed, choose a number such that HP-number is divisible by the target number.</p>
     </div>
     <script>
         const timerElement = document.getElementById("timer"), hpBarElement = document.getElementById("hp-bar"), buttonContainer = document.getElementById("button-container"), progressFilledElement = document.getElementById("progress-filled"), resultsElement = document.getElementById("results"), correctCountElement = document.getElementById("correct-count"), finalTimeElement = document.getElementById("final-time"), calibrationInstructionElement = document.getElementById("calibration-instruction");
         const iterations = 20, kValues = [2, 4, 3, 9, 5, 10, 6];
         let correctCount = 0, startTime, currentIteration = 0, timerInterval, buttonMap = {}, currentHP = 150000;
 
-        function formatTime(ms) { const m = String(Math.floor(ms / 60000)).padStart(2, '0'), s = String(Math.floor((ms % 60000) / 1000)).padStart(2, '0'), msStr = String(ms % 1000).padStart(3, '0'); return `${m}:${s}:${msStr}`; }
+        function formatTime(ms) { const m = String(Math.floor(ms / 60000)).padStart(2, '0'); const s = String(Math.floor((ms % 60000) / 1000)).padStart(2, '0'); const msDecimal = (ms % 1000 / 1000).toFixed(3).slice(1); return `${m}:${s}${msDecimal}`; }
         function updateTimer() { timerElement.textContent = formatTime(Date.now() - startTime); }
         function startTimer() { startTime = Date.now(); timerInterval = setInterval(updateTimer, 10); }
         function stopTimer() { clearInterval(timerInterval); }
@@ -109,18 +113,24 @@
             finalTimeElement.textContent = formatTime(Date.now() - startTime);
         }
         document.addEventListener("keydown", e => { const k = parseInt(e.key, 10); if (!isNaN(k) && buttonMap[k]) buttonMap[k].click(); });
+
+        const pageURL = window.location.href;
+
         document.getElementById("share-bluesky").addEventListener("click", () => {
-            const t = `I scored ${correctCount}/20 in Construct 7 (Ultimate)! Time: ${timerElement.textContent}`;
+            const t = `I scored ${correctCount}/20 in Construct 7 (Ultimate)\nTime: ${timerElement.textContent}\n${pageURL}`;
             window.open(`https://bsky.app/intent/compose?text=${encodeURIComponent(t)}`, "_blank");
         });
+
         document.getElementById("share-twitter").addEventListener("click", () => {
-            const t = `I scored ${correctCount}/20 in Construct 7 (Ultimate)! Time: ${timerElement.textContent}`;
+            const t = `I scored ${correctCount}/20 in Construct 7 (Ultimate)\nTime: ${timerElement.textContent}\n${pageURL}`;
             window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(t)}`, "_blank");
         });
+
         document.getElementById("copy-results").addEventListener("click", () => {
-            const t = `I scored ${correctCount}/20 in Construct 7 (Ultimate)! Time: ${timerElement.textContent}`;
+            const t = `I scored ${correctCount}/20 in Construct 7 (Ultimate)\nTime: ${timerElement.textContent}\n${pageURL}`;
             navigator.clipboard.writeText(t).then(() => alert("Results copied to clipboard!"));
         });
+
         startTimer();
         nextIteration();
     </script>
