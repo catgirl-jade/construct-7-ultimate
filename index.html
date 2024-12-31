@@ -116,7 +116,7 @@
                     }
                     button.appendChild(span);
                 }
-                button.addEventListener("mouseover", () => updateHPDisplay(currentHP - i));
+                button.addEventListener("mouseover", () => updateHPDisplay(currentHP + i));
                 button.addEventListener("mouseout", () => updateHPDisplay(currentHP));
                 button.addEventListener("click", () => checkAnswer(currentHP, k, i));
                 buttonContainer.appendChild(button);
