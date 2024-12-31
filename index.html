@@ -12,24 +12,7 @@
             padding: 0;
             background: #282c34;
             color: white;
-            transition: background-color 0.5s;
         }
-        .flash-green {
-            animation: flashGreen 0.5s;
-        }
-        .flash-red {
-            animation: flashRed 0.5s;
-        }
-        @keyframes flashGreen {
-            0% { background-color: #28a745; }
-            100% { background-color: #282c34; }
-        }
-        @keyframes flashRed {
-            0% { background-color: #ff4d4d; }
-            100% { background-color: #282c34; }
-        }
-
-        /* Your existing styles */
         #timer { position: absolute; top: 10px; right: 10px; font-size: 20px; }
         #robot { margin: 50px auto; height: 33vh; background: url('robot.png') no-repeat center/contain; }
         #calibration-instruction { margin-top: 10px; font-size: 20px; color: white; }
@@ -84,22 +67,14 @@
         const timerElement = document.getElementById("timer"), hpBarElement = document.getElementById("hp-bar"), buttonContainer = document.getElementById("button-container"), progressFilledElement = document.getElementById("progress-filled"), resultsElement = document.getElementById("results"), correctCountElement = document.getElementById("correct-count"), finalTimeElement = document.getElementById("final-time"), calibrationInstructionElement = document.getElementById("calibration-instruction");
         const iterations = 20, kValues = [2, 4, 3, 9, 5, 10, 6];
         let correctCount = 0, startTime, currentIteration = 0, timerInterval, buttonMap = {}, currentHP = 150000;
-        let gameEnded = false; // Flag to prevent further interactions after the game ends
 
         function formatTime(ms) { const m = String(Math.floor(ms / 60000)).padStart(2, '0'); const s = String(Math.floor((ms % 60000) / 1000)).padStart(2, '0'); const msDecimal = (ms % 1000 / 1000).toFixed(3).slice(1); return `${m}:${s}${msDecimal}`; }
         function updateTimer() { timerElement.textContent = formatTime(Date.now() - startTime); }
         function startTimer() { startTime = Date.now(); timerInterval = setInterval(updateTimer, 10); }
         function stopTimer() { clearInterval(timerInterval); }
         function updateHPDisplay(hp) { hpBarElement.textContent = `${hp}`; }
-
-        function flashScreen(isCorrect) {
-            document.body.classList.remove("flash-green", "flash-red");
-            void document.body.offsetWidth; // Trigger reflow
-            document.body.classList.add(isCorrect ? "flash-green" : "flash-red");
-        }
-
         function nextIteration() {
-            if (gameEnded || currentIteration >= iterations) return endGame();
+            if (currentIteration >= iterations) return endGame();
             currentIteration++;
             currentHP = Math.floor(Math.random() * 199001) + 1000;
             const k = kValues[Math.floor(Math.random() * kValues.length)];
@@ -130,24 +105,16 @@
             progressFilledElement.style.width = `${(currentIteration / iterations) * 100}%`;
             progressFilledElement.textContent = `${currentIteration}/${iterations}`;
         }
-
-        function checkAnswer(H, k, m) {
-            if (gameEnded) return; // Prevent further interactions if the game has ended
-            const isCorrect = (H - m) % k === 0;
-            if (isCorrect) correctCount++;
-            flashScreen(isCorrect);
-            nextIteration();
-        }
-
+        function checkAnswer(H, k, m) { if ((H - m) % k === 0) correctCount++; nextIteration(); }
         function endGame() {
-            if (gameEnded) return; // Ensure endGame logic is only run once
-            gameEnded = true;
             stopTimer();
             resultsElement.style.display = "block";
             correctCountElement.textContent = correctCount;
             finalTimeElement.textContent = formatTime(Date.now() - startTime);
         }
-				const pageURL = window.location.href;
+        document.addEventListener("keydown", e => { const k = parseInt(e.key, 10); if (!isNaN(k) && buttonMap[k]) buttonMap[k].click(); });
+
+        const pageURL = window.location.href;
 
         document.getElementById("share-bluesky").addEventListener("click", () => {
             const t = `I scored ${correctCount}/20 in Construct 7 (Ultimate)\nTime: ${timerElement.textContent}\n${pageURL}`;
@@ -162,10 +129,6 @@
         document.getElementById("copy-results").addEventListener("click", () => {
             const t = `I scored ${correctCount}/20 in Construct 7 (Ultimate)\nTime: ${timerElement.textContent}\n${pageURL}`;
             navigator.clipboard.writeText(t).then(() => alert("Results copied to clipboard!"));
-        document.addEventListener("keydown", e => { 
-            if (gameEnded) return; // Prevent key interactions if the game has ended
-            const k = parseInt(e.key, 10); 
-            if (!isNaN(k) && buttonMap[k]) buttonMap[k].click(); 
         });
 
         startTimer();
