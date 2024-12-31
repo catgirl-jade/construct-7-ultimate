@@ -12,7 +12,24 @@
             padding: 0;
             background: #282c34;
             color: white;
+            transition: background-color 0.5s;
         }
+        .flash-green {
+            animation: flashGreen 0.5s;
+        }
+        .flash-red {
+            animation: flashRed 0.5s;
+        }
+        @keyframes flashGreen {
+            0% { background-color: #28a745; }
+            100% { background-color: #282c34; }
+        }
+        @keyframes flashRed {
+            0% { background-color: #ff4d4d; }
+            100% { background-color: #282c34; }
+        }
+
+        /* Your existing styles */
         #timer { position: absolute; top: 10px; right: 10px; font-size: 20px; }
         #robot { margin: 50px auto; height: 33vh; background: url('robot.png') no-repeat center/contain; }
         #calibration-instruction { margin-top: 10px; font-size: 20px; color: white; }
@@ -73,6 +90,13 @@
         function startTimer() { startTime = Date.now(); timerInterval = setInterval(updateTimer, 10); }
         function stopTimer() { clearInterval(timerInterval); }
         function updateHPDisplay(hp) { hpBarElement.textContent = `${hp}`; }
+
+        function flashScreen(isCorrect) {
+            document.body.classList.remove("flash-green", "flash-red");
+            void document.body.offsetWidth; // Trigger reflow
+            document.body.classList.add(isCorrect ? "flash-green" : "flash-red");
+        }
+
         function nextIteration() {
             if (currentIteration >= iterations) return endGame();
             currentIteration++;
@@ -105,31 +129,22 @@
             progressFilledElement.style.width = `${(currentIteration / iterations) * 100}%`;
             progressFilledElement.textContent = `${currentIteration}/${iterations}`;
         }
-        function checkAnswer(H, k, m) { if ((H - m) % k === 0) correctCount++; nextIteration(); }
+
+        function checkAnswer(H, k, m) {
+            const isCorrect = (H - m) % k === 0;
+            if (isCorrect) correctCount++;
+            flashScreen(isCorrect);
+            nextIteration();
+        }
+
         function endGame() {
             stopTimer();
             resultsElement.style.display = "block";
             correctCountElement.textContent = correctCount;
             finalTimeElement.textContent = formatTime(Date.now() - startTime);
         }
+
         document.addEventListener("keydown", e => { const k = parseInt(e.key, 10); if (!isNaN(k) && buttonMap[k]) buttonMap[k].click(); });
-
-        const pageURL = window.location.href;
-
-        document.getElementById("share-bluesky").addEventListener("click", () => {
-            const t = `I scored ${correctCount}/20 in Construct 7 (Ultimate)\nTime: ${timerElement.textContent}\n${pageURL}`;
-            window.open(`https://bsky.app/intent/compose?text=${encodeURIComponent(t)}`, "_blank");
-        });
-
-        document.getElementById("share-twitter").addEventListener("click", () => {
-            const t = `I scored ${correctCount}/20 in Construct 7 (Ultimate)\nTime: ${timerElement.textContent}\n${pageURL}`;
-            window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(t)}`, "_blank");
-        });
-
-        document.getElementById("copy-results").addEventListener("click", () => {
-            const t = `I scored ${correctCount}/20 in Construct 7 (Ultimate)\nTime: ${timerElement.textContent}\n${pageURL}`;
-            navigator.clipboard.writeText(t).then(() => alert("Results copied to clipboard!"));
-        });
 
         startTimer();
         nextIteration();
