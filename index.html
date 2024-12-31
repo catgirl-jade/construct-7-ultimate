@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Construct 7 (Ultimate)</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+            background: #282c34;
+            color: white;
+        }
+        #timer { position: absolute; top: 10px; right: 10px; font-size: 20px; }
+        #robot { margin: 50px auto; height: 33vh; background: url('robot.png') no-repeat center/contain; }
+        #calibration-instruction { margin-top: 10px; font-size: 20px; color: white; }
+        #hp { margin: 20px; font-size: 20px; color: white; }
+        #hp-bar { display: inline-block; background-color: green; padding: 5px 10px; border-radius: 5px; color: white; font-family: monospace; }
+        .button-container { display: flex; justify-content: center; flex-wrap: wrap; margin-top: 20px; }
+        .button { width: 60px; height: 60px; margin: 10px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: bold; border: none; cursor: pointer; color: white; position: relative; }
+        .button span { display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr); gap: 2px; }
+        .dot { width: 10px; height: 10px; background: white; border-radius: 50%; border: 1px solid black; }
+        .button:hover { box-shadow: 0 0 20px; }
+        .button:nth-child(1) { background-color: #ff0000; box-shadow: 0 0 10px #ff0000; }
+        .button:nth-child(2) { background-color: #ff7f00; box-shadow: 0 0 10px #ff7f00; }
+        .button:nth-child(3) { background-color: #ffff00; box-shadow: 0 0 10px #ffff00; }
+        .button:nth-child(4) { background-color: #00ff00; box-shadow: 0 0 10px #00ff00; }
+        .button:nth-child(5) { background-color: #0000ff; box-shadow: 0 0 10px #0000ff; }
+        .button:nth-child(6) { background-color: #4b0082; box-shadow: 0 0 10px #4b0082; }
+        .button:nth-child(7) { background-color: #8b00ff; box-shadow: 0 0 10px #8b00ff; }
+        #progress-bar { width: 100%; height: 10px; background: #444; margin-top: 20px; position: relative; }
+        #progress-filled { height: 100%; background: #1da1f2; width: 0; transition: width 0.5s; position: absolute; top: 0; left: 0; text-align: center; line-height: 10px; color: white; font-size: 12px; }
+        @keyframes fadeOut { to { opacity: 0; display: none; } }
+        #results { display: none; margin-top: 50px; }
+        #instructions { font-size: 14px; margin-top: 20px; color: #ccc; }
+        #restart-button { margin-top: 20px; padding: 10px 20px; font-size: 18px; background: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        #restart-button:hover { background: #218838; }
+    </style>
+</head>
+<body>
+    <div id="timer">00:00:000</div>
+    <div id="robot"></div>
+    <div id="calibration-instruction">Calibrate vitals to multiples of <span id="k-value">3</span></div>
+    <div id="hp">HP: <span id="hp-bar">150000</span></div>
+    <div class="button-container" id="button-container"></div>
+    <div id="progress-bar"><div id="progress-filled">0/20</div></div>
+    <div id="results">
+        <h2>Construct 7 (Ultimate) Results: You got <span id="correct-count">0</span>/20 correct!</h2>
+        <h3>Your time: <span id="final-time">00:00:000</span></h3>
+        <button id="restart-button">Restart</button>
+        <div id="share-buttons">
+            <button id="share-bluesky" class="share-button">Share on Bluesky</button>
+            <button id="share-twitter" class="share-button">Share on Twitter</button>
+            <button id="copy-results" class="share-button">Copy Results</button>
+        </div>
+    </div>
+    <div id="instructions">
+        <p>Click the buttons or use the keyboard (0-9) to play. Hover over buttons to preview the resulting HP.</p>
+    </div>
+    <script>
+        const timerElement = document.getElementById("timer"), hpBarElement = document.getElementById("hp-bar"), buttonContainer = document.getElementById("button-container"), progressFilledElement = document.getElementById("progress-filled"), resultsElement = document.getElementById("results"), correctCountElement = document.getElementById("correct-count"), finalTimeElement = document.getElementById("final-time"), calibrationInstructionElement = document.getElementById("calibration-instruction");
+        const iterations = 20, kValues = [2, 4, 3, 9, 5, 10, 6];
+        let correctCount = 0, startTime, currentIteration = 0, timerInterval, buttonMap = {}, currentHP = 150000;
+
+        function formatTime(ms) { const m = String(Math.floor(ms / 60000)).padStart(2, '0'), s = String(Math.floor((ms % 60000) / 1000)).padStart(2, '0'), msStr = String(ms % 1000).padStart(3, '0'); return `${m}:${s}:${msStr}`; }
+        function updateTimer() { timerElement.textContent = formatTime(Date.now() - startTime); }
+        function startTimer() { startTime = Date.now(); timerInterval = setInterval(updateTimer, 10); }
+        function stopTimer() { clearInterval(timerInterval); }
+        function updateHPDisplay(hp) { hpBarElement.textContent = `${hp}`; }
+        function nextIteration() {
+            if (currentIteration >= iterations) return endGame();
+            currentIteration++;
+            currentHP = Math.floor(Math.random() * 199001) + 1000;
+            const k = kValues[Math.floor(Math.random() * kValues.length)];
+            updateHPDisplay(currentHP);
+            calibrationInstructionElement.innerHTML = `Calibrate vitals to multiples of <span id="k-value">${k}</span>`;
+            buttonContainer.innerHTML = "";
+            Object.keys(buttonMap).forEach(k => delete buttonMap[k]);
+            for (let i = 0; i < k; i++) {
+                const button = document.createElement("button");
+                button.className = "button";
+                if (i === 0) button.textContent = "0";
+                else {
+                    const span = document.createElement("span"), patterns = { 1: [4], 2: [0, 8], 3: [0, 4, 8], 4: [0, 2, 6, 8], 5: [0, 2, 4, 6, 8], 6: [0, 1, 2, 6, 7, 8], 7: [0, 2, 4, 6, 7, 8, 3], 8: [0, 1, 2, 3, 5, 6, 7, 8], 9: [0, 1, 2, 3, 4, 5, 6, 7, 8] };
+                    for (let j = 0; j < 9; j++) {
+                        const dot = document.createElement("div");
+                        dot.className = "dot";
+                        dot.style.visibility = patterns[Math.min(i, 9)].includes(j) ? "visible" : "hidden";
+                        span.appendChild(dot);
+                    }
+                    button.appendChild(span);
+                }
+                button.addEventListener("mouseover", () => updateHPDisplay(currentHP - i));
+                button.addEventListener("mouseout", () => updateHPDisplay(currentHP));
+                button.addEventListener("click", () => checkAnswer(currentHP, k, i));
+                buttonContainer.appendChild(button);
+                buttonMap[i] = button;
+            }
+            progressFilledElement.style.width = `${(currentIteration / iterations) * 100}%`;
+            progressFilledElement.textContent = `${currentIteration}/${iterations}`;
+        }
+        function checkAnswer(H, k, m) { if ((H - m) % k === 0) correctCount++; nextIteration(); }
+        function endGame() {
+            stopTimer();
+            resultsElement.style.display = "block";
+            correctCountElement.textContent = correctCount;
+            finalTimeElement.textContent = formatTime(Date.now() - startTime);
+        }
+        document.addEventListener("keydown", e => { const k = parseInt(e.key, 10); if (!isNaN(k) && buttonMap[k]) buttonMap[k].click(); });
+        document.getElementById("share-bluesky").addEventListener("click", () => {
+            const t = `I scored ${correctCount}/20 in Construct 7 (Ultimate)! Time: ${timerElement.textContent}`;
+            window.open(`https://bsky.app/intent/compose?text=${encodeURIComponent(t)}`, "_blank");
+        });
+        document.getElementById("share-twitter").addEventListener("click", () => {
+            const t = `I scored ${correctCount}/20 in Construct 7 (Ultimate)! Time: ${timerElement.textContent}`;
+            window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(t)}`, "_blank");
+        });
+        document.getElementById("copy-results").addEventListener("click", () => {
+            const t = `I scored ${correctCount}/20 in Construct 7 (Ultimate)! Time: ${timerElement.textContent}`;
+            navigator.clipboard.writeText(t).then(() => alert("Results copied to clipboard!"));
+        });
+        startTimer();
+        nextIteration();
+    </script>
+</body>
+</html>
