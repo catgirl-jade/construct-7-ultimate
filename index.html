@@ -84,6 +84,7 @@
         const timerElement = document.getElementById("timer"), hpBarElement = document.getElementById("hp-bar"), buttonContainer = document.getElementById("button-container"), progressFilledElement = document.getElementById("progress-filled"), resultsElement = document.getElementById("results"), correctCountElement = document.getElementById("correct-count"), finalTimeElement = document.getElementById("final-time"), calibrationInstructionElement = document.getElementById("calibration-instruction");
         const iterations = 20, kValues = [2, 4, 3, 9, 5, 10, 6];
         let correctCount = 0, startTime, currentIteration = 0, timerInterval, buttonMap = {}, currentHP = 150000;
+        let gameEnded = false; // Flag to prevent further interactions after the game ends
 
         function formatTime(ms) { const m = String(Math.floor(ms / 60000)).padStart(2, '0'); const s = String(Math.floor((ms % 60000) / 1000)).padStart(2, '0'); const msDecimal = (ms % 1000 / 1000).toFixed(3).slice(1); return `${m}:${s}${msDecimal}`; }
         function updateTimer() { timerElement.textContent = formatTime(Date.now() - startTime); }
@@ -98,7 +99,7 @@
         }
 
         function nextIteration() {
-            if (currentIteration >= iterations) return endGame();
+            if (gameEnded || currentIteration >= iterations) return endGame();
             currentIteration++;
             currentHP = Math.floor(Math.random() * 199001) + 1000;
             const k = kValues[Math.floor(Math.random() * kValues.length)];
@@ -131,6 +132,7 @@
         }
 
         function checkAnswer(H, k, m) {
+            if (gameEnded) return; // Prevent further interactions if the game has ended
             const isCorrect = (H - m) % k === 0;
             if (isCorrect) correctCount++;
             flashScreen(isCorrect);
@@ -138,13 +140,19 @@
         }
 
         function endGame() {
+            if (gameEnded) return; // Ensure endGame logic is only run once
+            gameEnded = true;
             stopTimer();
             resultsElement.style.display = "block";
             correctCountElement.textContent = correctCount;
             finalTimeElement.textContent = formatTime(Date.now() - startTime);
         }
 
-        document.addEventListener("keydown", e => { const k = parseInt(e.key, 10); if (!isNaN(k) && buttonMap[k]) buttonMap[k].click(); });
+        document.addEventListener("keydown", e => { 
+            if (gameEnded) return; // Prevent key interactions if the game has ended
+            const k = parseInt(e.key, 10); 
+            if (!isNaN(k) && buttonMap[k]) buttonMap[k].click(); 
+        });
 
         startTimer();
         nextIteration();
