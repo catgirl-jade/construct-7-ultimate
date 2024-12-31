@@ -75,7 +75,7 @@
         </div>
     </div>
     <div id="instructions">
-        <p>Click the buttons or use the keyboard (0-9) to play. Hover over buttons to preview the resulting HP. To succeed, choose a number such that HP-number is divisible by the target number.</p>
+        <p>Click the buttons or use the keyboard (0-9) to play. Hover over buttons to preview the resulting HP. To succeed, choose a number such that HP+number is divisible by the target number.</p>
     </div>
     <script>
         const timerElement = document.getElementById("timer"), hpBarElement = document.getElementById("hp-bar"), buttonContainer = document.getElementById("button-container"), progressFilledElement = document.getElementById("progress-filled"), resultsElement = document.getElementById("results"), correctCountElement = document.getElementById("correct-count"), finalTimeElement = document.getElementById("final-time"), calibrationInstructionElement = document.getElementById("calibration-instruction");
@@ -127,7 +127,7 @@
         }
         function checkAnswer(H, k, m) {
           if (gameEnded) return; // Prevent further interactions if the game has ended
-          const isCorrect = (H - m) % k === 0;
+          const isCorrect = (H + m) % k === 0;
 					if (isCorrect) {
           	correctCount++;
 					}
