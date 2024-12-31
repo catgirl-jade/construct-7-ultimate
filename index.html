@@ -147,7 +147,21 @@
             correctCountElement.textContent = correctCount;
             finalTimeElement.textContent = formatTime(Date.now() - startTime);
         }
+				const pageURL = window.location.href;
 
+        document.getElementById("share-bluesky").addEventListener("click", () => {
+            const t = `I scored ${correctCount}/20 in Construct 7 (Ultimate)\nTime: ${timerElement.textContent}\n${pageURL}`;
+            window.open(`https://bsky.app/intent/compose?text=${encodeURIComponent(t)}`, "_blank");
+        });
+
+        document.getElementById("share-twitter").addEventListener("click", () => {
+            const t = `I scored ${correctCount}/20 in Construct 7 (Ultimate)\nTime: ${timerElement.textContent}\n${pageURL}`;
+            window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(t)}`, "_blank");
+        });
+
+        document.getElementById("copy-results").addEventListener("click", () => {
+            const t = `I scored ${correctCount}/20 in Construct 7 (Ultimate)\nTime: ${timerElement.textContent}\n${pageURL}`;
+            navigator.clipboard.writeText(t).then(() => alert("Results copied to clipboard!"));
         document.addEventListener("keydown", e => { 
             if (gameEnded) return; // Prevent key interactions if the game has ended
             const k = parseInt(e.key, 10); 
